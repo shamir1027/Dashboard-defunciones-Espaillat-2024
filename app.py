@@ -1,4 +1,4 @@
-# app.py
+ app.py
 # Código principal del dashboard final profesional
 
 import dash
@@ -6,7 +6,6 @@ from dash import html, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
-import dash_leaflet as dl
 import os
 
 # Inicializar app con Bootstrap
@@ -15,6 +14,9 @@ server = app.server
 
 # Cargar datos
 df = pd.read_excel("data/defunciones_2024.xlsx")
+
+# Imprimir las primeras filas para asegurarse de que los datos se cargan bien (esto es para depuración)
+print(df.head())  # Esto te ayudará a saber las columnas disponibles
 
 # Layout general
 app.layout = dbc.Container([
@@ -45,29 +47,69 @@ app.layout = dbc.Container([
 )
 def render_tab_content(active_tab):
     if active_tab == "tab1":
-        # Crear gráfico de barras en Visión General
-        fig = px.bar(df, x="column1", y="column2")  # Cambia "column1" y "column2" según tus datos
+        # Gráfico de barras para defunciones por municipio
+        fig = px.bar(df,
+                     x="MUNICIPIO_MUERTE",  # Nombre de la columna para municipio
+                     y=df.groupby("MUNICIPIO_MUERTE")["FECHA_DEF"].count(),  # Defunciones por municipio
+                     labels={"MUNICIPIO_MUERTE": "Municipio", "y": "Número de Defunciones"},
+                     title="Defunciones por Municipio")
         return dcc.Graph(figure=fig)  # Devuelve el gráfico
+
     elif active_tab == "tab2":
-        return html.Div("Análisis de enfermedades catastróficas")
+        # Gráfico de enfermedades catastróficas
+        fig = px.bar(df,
+                     x="CIECAUSADEF1",  # Código de causa de muerte
+                     y=df.groupby("CIECAUSADEF1")["FECHA_DEF"].count(),
+                     labels={"CIECAUSADEF1": "Causa de Muerte", "y": "Número de Defunciones"},
+                     title="Defunciones por Causas Catastróficas")
+        return dcc.Graph(figure=fig)
+
     elif active_tab == "tab3":
-        return html.Div("Análisis de traumas")
+        # Gráfico de traumas
+        fig = px.bar(df,
+                     x="LUGAR_OCURRIO_VIOLENCIA",  # Lugar de ocurrencia de los traumas
+                     y=df.groupby("LUGAR_OCURRIO_VIOLENCIA")["FECHA_DEF"].count(),
+                     labels={"LUGAR_OCURRIO_VIOLENCIA": "Lugar de Trauma", "y": "Número de Defunciones"},
+                     title="Defunciones por Traumas")
+        return dcc.Graph(figure=fig)
+
     elif active_tab == "tab4":
-        return html.Div("Tendencias temporales")
+        # Gráfico de temporalidad de defunciones
+        df["FECHA_DEF"] = pd.to_datetime(df["FECHA_DEF"])  # Asegurarse de que la fecha esté en formato datetime
+        fig = px.line(df,
+                      x="FECHA_DEF",  # Fecha de defunción
+                      y=df.groupby(df["FECHA_DEF"].dt.to_period("M")).size(),  # Defunciones por mes
+                      labels={"FECHA_DEF": "Fecha de Defunción", "y": "Número de Defunciones"},
+                      title="Tendencias Temporales de Defunciones")
+        return dcc.Graph(figure=fig)
+
     elif active_tab == "tab5":
-        return html.Div("Centros de salud con más certificaciones")
+        # Gráfico de centros de salud
+        fig = px.bar(df,
+                     x="CENTRO_SALUD",  # Nombre del centro de salud
+                     y=df.groupby("CENTRO_SALUD")["FECHA_DEF"].count(),
+                     labels={"CENTRO_SALUD": "Centro de Salud", "y": "Número de Defunciones"},
+                     title="Defunciones por Centro de Salud")
+        return dcc.Graph(figure=fig)
+
     elif active_tab == "tab6":
         return html.Div("Tipos de certificación y certificantes")
+
     elif active_tab == "tab7":
         return html.Div("Comparativo municipal con radar y AVPP")
+
     elif active_tab == "tab8":
         return html.Div("Botones de descarga, exportación, filtros")
+
     elif active_tab == "tab9":
         return html.Div("Muertes infantiles por edad y causa")
+
     elif active_tab == "tab10":
         return html.Div("Mujeres en edad fértil fallecidas")
+
     elif active_tab == "tab11":
         return html.Div("⚠️ Análisis de calidad del dato por centro de salud")
+
     else:
         return html.Div("Bienvenido al dashboard de defunciones")
 
