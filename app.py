@@ -1,4 +1,4 @@
- app.py
+# app.py
 # Código principal del dashboard final profesional
 
 import dash
@@ -6,6 +6,7 @@ from dash import html, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
+import dash_leaflet as dl
 import os
 
 # Inicializar app con Bootstrap
@@ -96,7 +97,11 @@ def render_tab_content(active_tab):
         return html.Div("Tipos de certificación y certificantes")
 
     elif active_tab == "tab7":
-        return html.Div("Comparativo municipal con radar y AVPP")
+        # Mapa georreferenciado para comparativo municipal
+        fig = dl.Map([dl.TileLayer(), 
+                      dl.CircleMarker(center=[19.0, -70.0], radius=5, color="red")], 
+                     id="map", style={"width": "100%", "height": "500px"})
+        return fig  # Muestra el mapa interactivo
 
     elif active_tab == "tab8":
         return html.Div("Botones de descarga, exportación, filtros")
@@ -108,7 +113,13 @@ def render_tab_content(active_tab):
         return html.Div("Mujeres en edad fértil fallecidas")
 
     elif active_tab == "tab11":
-        return html.Div("⚠️ Análisis de calidad del dato por centro de salud")
+        # Análisis de completitud de datos
+        missing_data = df.isnull().sum()  # Contar los valores faltantes por columna
+        missing_data = missing_data[missing_data > 0]  # Filtrar solo las columnas con datos faltantes
+        fig = px.bar(missing_data, x=missing_data.index, y=missing_data.values,
+                     labels={"x": "Variables", "y": "Valores Faltantes"},
+                     title="Análisis de Completitud de Datos")
+        return dcc.Graph(figure=fig)
 
     else:
         return html.Div("Bienvenido al dashboard de defunciones")
