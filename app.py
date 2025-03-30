@@ -16,7 +16,7 @@ server = app.server
 # Cargar datos
 df = pd.read_excel("data/defunciones_2024.xlsx")
 
-# Imprimir las primeras filas para asegurarse de que los datos se cargan bien (esto es para depuración)
+# Verificar las primeras filas para asegurarse de que los datos se cargan bien (esto es para depuración)
 print(df.head())  # Esto te ayudará a saber las columnas disponibles
 
 # Layout general
@@ -48,16 +48,16 @@ app.layout = dbc.Container([
 )
 def render_tab_content(active_tab):
     if active_tab == "tab1":
-        # Gráfico de barras para defunciones por municipio
+        # Gráfico de defunciones por municipio
         fig = px.bar(df,
-                     x="MUNICIPIO_MUERTE",  # Nombre de la columna para municipio
-                     y=df.groupby("MUNICIPIO_MUERTE")["FECHA_DEF"].count(),  # Defunciones por municipio
+                     x="MUNICIPIO_MUERTE",  # Asegúrate de que esta columna esté presente
+                     y=df.groupby("MUNICIPIO_MUERTE")["FECHA_DEF"].count(),  # Contando las defunciones por municipio
                      labels={"MUNICIPIO_MUERTE": "Municipio", "y": "Número de Defunciones"},
                      title="Defunciones por Municipio")
-        return dcc.Graph(figure=fig)  # Devuelve el gráfico
+        return dcc.Graph(figure=fig)
 
     elif active_tab == "tab2":
-        # Gráfico de enfermedades catastróficas
+        # Gráfico de causas catastróficas
         fig = px.bar(df,
                      x="CIECAUSADEF1",  # Código de causa de muerte
                      y=df.groupby("CIECAUSADEF1")["FECHA_DEF"].count(),
@@ -98,10 +98,16 @@ def render_tab_content(active_tab):
 
     elif active_tab == "tab7":
         # Mapa georreferenciado para comparativo municipal
-        fig = dl.Map([dl.TileLayer(), 
-                      dl.CircleMarker(center=[19.0, -70.0], radius=5, color="red")], 
-                     id="map", style={"width": "100%", "height": "500px"})
-        return fig  # Muestra el mapa interactivo
+        # Asegurarse de que tienes las columnas de latitud y longitud
+        if "LATITUD" in df.columns and "LONGITUD" in df.columns:
+            markers = [
+                dl.CircleMarker(center=[lat, lon], radius=5, color="red") 
+                for lat, lon in zip(df["LATITUD"], df["LONGITUD"])
+            ]
+            fig = dl.Map([dl.TileLayer()] + markers, style={"width": "100%", "height": "500px"})
+            return fig
+        else:
+            return html.Div("No se encontraron coordenadas geográficas en el archivo.")
 
     elif active_tab == "tab8":
         return html.Div("Botones de descarga, exportación, filtros")
@@ -128,3 +134,4 @@ if __name__ == '__main__':
     # Obtener el puerto dinámico asignado por Render o usar 10000 como respaldo
     port = int(os.environ.get("PORT", 10000))
     app.run(debug=True, host="0.0.0.0", port=port)
+
