@@ -3,3 +3,4 @@ pandas
 plotly
 dash_leaflet
 dash-bootstrap-components
+openpyxl
