@@ -1,14 +1,13 @@
-
 # app.py
 # Código principal del dashboard final profesional
 
 import dash
-from dash import html, dcc, Input, Output, State
+from dash import html, dcc, Input, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 import dash_leaflet as dl
-import json
+import os
 
 # Inicializar app con Bootstrap
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -17,7 +16,7 @@ server = app.server
 # Cargar datos
 df = pd.read_excel("data/defunciones_2024.xlsx")
 
-# Layout general (ejemplo)
+# Layout general
 app.layout = dbc.Container([
     dbc.Row([
         dbc.Col(html.H2("Dashboard Provincial de Defunciones - Espaillat 2024"), width=12)
@@ -46,7 +45,9 @@ app.layout = dbc.Container([
 )
 def render_tab_content(active_tab):
     if active_tab == "tab1":
-        return html.Div("Contenido de visión general con mapa, resumen e indicadores.")
+        # Crear gráfico de barras en Visión General
+        fig = px.bar(df, x="column1", y="column2")  # Cambia "column1" y "column2" según tus datos
+        return dcc.Graph(figure=fig)  # Devuelve el gráfico
     elif active_tab == "tab2":
         return html.Div("Análisis de enfermedades catastróficas")
     elif active_tab == "tab3":
@@ -71,11 +72,6 @@ def render_tab_content(active_tab):
         return html.Div("Bienvenido al dashboard de defunciones")
 
 if __name__ == '__main__':
-    import os
-
-
-port = int(os.environ.get("PORT", 10000))
-
-
-app.run(debug=True, host="0.0.0.0", port=port)
-
+    # Obtener el puerto dinámico asignado por Render o usar 10000 como respaldo
+    port = int(os.environ.get("PORT", 10000))
+    app.run(debug=True, host="0.0.0.0", port=port)
