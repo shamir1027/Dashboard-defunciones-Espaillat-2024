@@ -15,7 +15,7 @@ server = app.server
 df = pd.read_excel("data/defunciones_2024.xlsx")
 
 # Cargar datos geográficos desde GeoJSON
-geojson_path = '/mnt/data/esp_municipios.geojson'
+geojson_path = "data/esp_municipios.geojson'
 with open(geojson_path, 'r') as f:
     geojson_data = json.load(f)
 
